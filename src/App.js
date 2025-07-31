@@ -146,37 +146,42 @@ export default function App() {
   const balance = totalIncome - totalExpense;
   const investTotal = investTransactions.reduce((acc, t) => t.type === "deposit" ? acc + t.amount : acc - t.amount, 0);
 
-  // Regroupement des dépenses par catégorie
-  const expenseByCategory = categories.map(cat => {
-    const total = transactions
-      .filter(t => {
-        const cleanCat = t.category.replace(/^[^\w]+/, "").trim().toLowerCase();
-        return t.type === "expense" && cleanCat === cat.name.toLowerCase();
-      })
-      .reduce((sum, t) => sum + t.amount, 0);
-    return total;
-  });
+// filtrer seulement les catégories avec des dépenses > 0
+const usedCategories = categories.filter(cat => {
+  const total = transactions
+    .filter(t => t.type === "expense" && t.category.replace(/^[^\w]+/, "").trim().toLowerCase() === cat.name.toLowerCase())
+    .reduce((sum, t) => sum + t.amount, 0);
+  return total > 0;
+});
 
-  const pieData = {
-    labels: categories.map(c => `${c.icon} ${c.name}`),
-    datasets: [{
-      data: expenseByCategory,
-      backgroundColor: pastelColors,
-      borderWidth: 1,
-      borderColor: "#fff",
-      hoverOffset: 8
-    }],
-  };
-  
-  const barData = {
-    labels: categories.map(c => `${c.icon} ${c.name}`),
-    datasets: [{
-      label: "Dépenses (€)",
-      data: expenseByCategory,
-      backgroundColor: pastelColors,
-      borderRadius: 6
-    }],
-  };
+const expenseByCategory = usedCategories.map(cat => {
+  return transactions
+    .filter(t => t.type === "expense" && t.category.replace(/^[^\w]+/, "").trim().toLowerCase() === cat.name.toLowerCase())
+    .reduce((sum, t) => sum + t.amount, 0);
+});
+
+
+const pieData = {
+  labels: usedCategories.map(c => `${c.icon} ${c.name}`),
+  datasets: [{
+    data: expenseByCategory,
+    backgroundColor: pastelColors.slice(0, usedCategories.length),
+    borderWidth: 1,
+    borderColor: "#fff",
+    hoverOffset: 8
+  }],
+};
+
+const barData = {
+  labels: usedCategories.map(c => `${c.icon} ${c.name}`),
+  datasets: [{
+    label: "Dépenses (€)",
+    data: expenseByCategory,
+    backgroundColor: pastelColors.slice(0, usedCategories.length),
+    borderRadius: 6
+  }],
+};
+
 
   return (
       <div className="flex min-h-screen flex-col lg:flex-row bg-[#FDFCFB] font-sans">
@@ -227,7 +232,7 @@ export default function App() {
 
 
       {/* Contenu */}
-      <div className="flex-1 p-6 space-y-6">
+      <div className="flex-1 p-6 pt-16 space-y-6 lg:pt-8">
         
         {/* Dashboard */}
         {activeSection === "dashboard" && (
