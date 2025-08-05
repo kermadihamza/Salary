@@ -197,7 +197,7 @@ const saveEdit = () => {
   .filter(t => t.type === "savings")
   .reduce((acc, t) => acc + t.amount, 0);
 
-  const balance = totalIncome - totalExpense;
+  const balance = totalIncome - (totalExpense + totalSavings);
 
 // filtrer seulement les catégories avec des dépenses > 0
 const usedCategories = categories.filter(cat => {
