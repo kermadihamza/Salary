@@ -13,18 +13,95 @@ import {
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 export default function App() {
+    // 🎯 Catégories par défaut
+    const defaultCategories = [
+      { name: "Courses", icon: "🛒", color: "#A5D8A2" },   // Vert pastel
+      { name: "Loyer", icon: "🏠", color: "#A2C8F0" },     // Bleu pastel
+      { name: "Essence", icon: "⛽", color: "#F9E79F" },    // Jaune pastel
+      { name: "Loisirs", icon: "🎮", color: "#D7BDE2" },   // Violet pastel
+      { name: "Shopping", icon: "🛍️", color: "#F5B7B1" }, // Rose pastelfvf
+      { name: "Autres", icon: "💰", color: "#D5DBDB" }     // Gris pastel
+    ];
   const [activeSection, setActiveSection] = useState("dashboard");
   const [selectedIcon, setSelectedIcon] = useState("🛒");
+  const [editId, setEditId] = useState(null);
+const [editAmount, setEditAmount] = useState("");
+const [editDescription, setEditDescription] = useState("");
+  // 🔹 States
+  const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem("categories")) || defaultCategories);
+  const [transactions, setTransactions] = useState(() => {
+    const stored = JSON.parse(localStorage.getItem("transactions")) || [];
+  
+    // ⚠️ Ajout automatique de la date si manquante
+    const cleaned = stored.map(t => {
+      if (!t.date) {
+        return { ...t, date: new Date().toLocaleDateString("fr-FR") };
+      }
+      return t;
+    });
+  
+    // Mettre à jour le localStorage avec les données corrigées
+    localStorage.setItem("transactions", JSON.stringify(cleaned));
+    return cleaned;
+  });
+  
+  const [type, setType] = useState("expense");
+  const [amount, setAmount] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]?.name || "");
+  const [description, setDescription] = useState("");
+  const [newCategory, setNewCategory] = useState("");
 
-  // 🎯 Catégories par défaut
-  const defaultCategories = [
-    { name: "Courses", icon: "🛒", color: "#A5D8A2" },   // Vert pastel
-    { name: "Loyer", icon: "🏠", color: "#A2C8F0" },     // Bleu pastel
-    { name: "Essence", icon: "⛽", color: "#F9E79F" },    // Jaune pastel
-    { name: "Loisirs", icon: "🎮", color: "#D7BDE2" },   // Violet pastel
-    { name: "Shopping", icon: "🛍️", color: "#F5B7B1" }, // Rose pastel
-    { name: "Autres", icon: "💰", color: "#D5DBDB" }     // Gris pastel
-  ];
+
+  const [menuOpen, setMenuOpen] = useState(false);
+const [filterType, setFilterType] = useState("all");
+const [filterCategory, setFilterCategory] = useState("all");
+const [filterMonth, setFilterMonth] = useState("all");
+
+
+const filteredTransactions = transactions.filter((t) => {
+  const typeMatch = filterType === "all" || t.type === filterType;
+  const categoryMatch =
+  filterCategory === "all" ||
+  t.category.trim().toLowerCase() === filterCategory.trim().toLowerCase();
+  console.log(t.category);
+
+  // Filtre mois
+  const [day, month, year] = t.date.split("/"); // format fr-FR "JJ/MM/AAAA"
+  const monthMatch =
+  filterMonth === "all" ||
+  parseInt(filterMonth) === parseInt(month, 10);
+
+  return typeMatch && categoryMatch && monthMatch;
+});
+
+
+
+
+
+
+
+
+  const deleteTransaction = (id) => {
+    setTransactions(transactions.filter(t => t.id !== id));
+  };
+
+
+const startEdit = (t) => {
+  setEditId(t.id);
+  setEditAmount(t.amount);
+  setEditDescription(t.description);
+};
+
+const saveEdit = () => {
+  setTransactions(transactions.map(t => 
+    t.id === editId 
+      ? { ...t, amount: parseFloat(editAmount), description: editDescription } 
+      : t
+  ));
+  setEditId(null);
+};
+
+  
 
   const iconsData = [
     // 🏠 Vie quotidienne
@@ -71,26 +148,12 @@ export default function App() {
     "rgba(229, 204, 255, 0.8)"  // Lavande
   ]
 
-  // 🔹 States
-  const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem("categories")) || defaultCategories);
-  const [transactions, setTransactions] = useState(() => JSON.parse(localStorage.getItem("transactions")) || []);
-  const [type, setType] = useState("expense");
-  const [amount, setAmount] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(categories[0]?.name || "");
-  const [description, setDescription] = useState("");
-  const [newCategory, setNewCategory] = useState("");
 
-  const [investTransactions, setInvestTransactions] = useState(() => JSON.parse(localStorage.getItem("invest")) || []);
-  const [investAmount, setInvestAmount] = useState("");
-  const [investDesc, setInvestDesc] = useState("");
-
-  const [menuOpen, setMenuOpen] = useState(false);
 
 
   // 💾 LocalStorage
   useEffect(() => localStorage.setItem("transactions", JSON.stringify(transactions)), [transactions]);
   useEffect(() => localStorage.setItem("categories", JSON.stringify(categories)), [categories]);
-  useEffect(() => localStorage.setItem("invest", JSON.stringify(investTransactions)), [investTransactions]);
 
   // ➕ Ajouter transaction
   const addTransaction = () => {
@@ -116,26 +179,13 @@ export default function App() {
   };
   
 
-  // ➕ Ajouter investissement
-  const addInvestment = (action) => {
-    if (!investAmount) return;
-    setInvestTransactions([...investTransactions, {
-      id: Date.now(),
-      type: action,
-      amount: parseFloat(investAmount),
-      description: investDesc,
-      date: new Date().toLocaleDateString("fr-FR"),
-    }]);
-    setInvestAmount("");
-    setInvestDesc("");
-  };
+
 
   // 🔄 Reset
   const resetAll = () => {
     if (window.confirm("Réinitialiser TOUT ?")) {
       setTransactions([]);
       setCategories(defaultCategories);
-      setInvestTransactions([]);
       localStorage.clear();
     }
   };
@@ -143,20 +193,23 @@ export default function App() {
   // 📊 Calculs
   const totalIncome = transactions.filter(t => t.type === "income").reduce((acc, t) => acc + t.amount, 0);
   const totalExpense = transactions.filter(t => t.type === "expense").reduce((acc, t) => acc + t.amount, 0);
+  const totalSavings = transactions
+  .filter(t => t.type === "savings")
+  .reduce((acc, t) => acc + t.amount, 0);
+
   const balance = totalIncome - totalExpense;
-  const investTotal = investTransactions.reduce((acc, t) => t.type === "deposit" ? acc + t.amount : acc - t.amount, 0);
 
 // filtrer seulement les catégories avec des dépenses > 0
 const usedCategories = categories.filter(cat => {
   const total = transactions
-    .filter(t => t.type === "expense" && t.category.replace(/^[^\w]+/, "").trim().toLowerCase() === cat.name.toLowerCase())
+    .filter(t => t.type === "expense" || t.type === "savings" && t.category.replace(/^[^\w]+/, "").trim().toLowerCase() === cat.name.toLowerCase())
     .reduce((sum, t) => sum + t.amount, 0);
   return total > 0;
 });
 
 const expenseByCategory = usedCategories.map(cat => {
   return transactions
-    .filter(t => t.type === "expense" && t.category.replace(/^[^\w]+/, "").trim().toLowerCase() === cat.name.toLowerCase())
+    .filter(t => t.type === "expense" || t.type === "savings" && t.category.replace(/^[^\w]+/, "").trim().toLowerCase() === cat.name.toLowerCase())
     .reduce((sum, t) => sum + t.amount, 0);
 });
 
@@ -206,7 +259,7 @@ const barData = {
 >
 
   <h2 className="text-xl font-bold text-center mb-6 text-[#7FB3D5]">💰 BudgetApp</h2>
-  {["dashboard", "categories", "transactions", "invest", "history"].map(section => (
+  {["dashboard", "categories", "transactions", "history"].map(section => (
     <button
       key={section}
       onClick={() => { setActiveSection(section); setMenuOpen(false); }}
@@ -235,37 +288,51 @@ const barData = {
       <div className="flex-1 p-6 pt-16 space-y-6 lg:pt-8">
         
         {/* Dashboard */}
-        {activeSection === "dashboard" && (
-          <div>
-            <h1 className="text-2xl font-bold mb-4 text-center text-[#2874A6]">Tableau de Bord</h1>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-[#D5F5E3] rounded-xl p-4 shadow text-center">
-                <p>Revenus</p>
-                <p className="text-2xl font-bold">{totalIncome} €</p>
-              </div>
-              <div className="bg-[#FADBD8] rounded-xl p-4 shadow text-center">
-                <p>Dépenses</p>
-                <p className="text-2xl font-bold">{totalExpense} €</p>
-              </div>
-              <div className="bg-[#D6EAF8] rounded-xl p-4 shadow text-center">
-                <p>Solde</p>
-                <p className="text-2xl font-bold">{balance} €</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
-              <div className="bg-white rounded-xl shadow p-4 flex justify-center">
-                <div className="w-full max-w-xs h-48 sm:h-64">
-                  <Pie data={pieData} options={{ responsive: true, maintainAspectRatio: false }} />
-                </div>
-              </div>
+{activeSection === "dashboard" && (
+  <div>
+    <h1 className="text-2xl font-bold mb-4 text-center text-[#2874A6]">
+      Tableau de Bord
+    </h1>
 
-              <div className="bg-white rounded-xl shadow p-4">
-                <h2 className="text-center mb-2 font-semibold">Dépenses par catégorie</h2>
-                <Bar data={barData} />
-              </div>
-            </div>
-          </div>
-        )}
+    {/* Grille plus compacte sur mobile */}
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="bg-[#D5F5E3] rounded-xl p-4 shadow text-center">
+        <p>Revenus</p>
+        <p className="text-2xl font-bold">{totalIncome} €</p>
+      </div>
+
+      <div className="bg-[#FADBD8] rounded-xl p-4 shadow text-center">
+        <p>Dépenses</p>
+        <p className="text-2xl font-bold">{totalExpense} €</p>
+      </div>
+
+      <div className="bg-[#E8DAEF] rounded-xl p-4 shadow text-center">
+        <p>Épargne/Invest.</p>
+        <p className="text-2xl font-bold">{totalSavings} €</p>
+      </div>
+
+      <div className="bg-[#D6EAF8] rounded-xl p-4 shadow text-center">
+        <p>Solde</p>
+        <p className="text-2xl font-bold">{balance} €</p>
+      </div>
+    </div>
+
+    {/* Graphiques */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+      <div className="bg-white rounded-xl shadow p-4 flex justify-center">
+        <div className="w-full max-w-xs h-48 sm:h-64">
+          <Pie data={pieData} options={{ responsive: true, maintainAspectRatio: false }} />
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow p-4">
+        <h2 className="text-center mb-2 font-semibold">Dépenses par catégorie</h2>
+        <Bar data={barData} />
+      </div>
+    </div>
+  </div>
+)}
+
 
 {/* Catégories */}
 {activeSection === "categories" && (
@@ -323,6 +390,7 @@ const barData = {
               <select value={type} onChange={e=>setType(e.target.value)} className="border p-2 rounded w-full">
                 <option value="expense">Dépense</option>
                 <option value="income">Revenu</option>
+                <option value="savings">Invest./Épargne</option>
               </select>
               <select value={selectedCategory} onChange={e=>setSelectedCategory(e.target.value)} className="border p-2 rounded w-full">
                 {categories.map(cat=><option key={cat.name}>{cat.icon} {cat.name}</option>)}
@@ -334,47 +402,168 @@ const barData = {
           </div>
         )}
 
-        {/* Investissements */}
-        {activeSection === "invest" && (
-          <div>
-            <h1 className="text-xl font-bold mb-4 text-center text-[#2874A6]">Investissements</h1>
-            <p className="mb-2">Solde: {investTotal} €</p>
-            <div className="bg-white p-4 rounded-xl shadow space-y-3">
-              <input type="number" value={investAmount} onChange={e=>setInvestAmount(e.target.value)} placeholder="Montant" className="border p-2 rounded w-full"/>
-              <input type="text" value={investDesc} onChange={e=>setInvestDesc(e.target.value)} placeholder="Description" className="border p-2 rounded w-full"/>
-              <div className="flex gap-2">
-                <button onClick={()=>addInvestment("deposit")} className="bg-[#D5F5E3] text-[#145A32] p-2 rounded w-1/2 hover:bg-[#ABEBC6]">Ajouter</button>
-                <button onClick={()=>addInvestment("withdraw")} className="bg-[#FADBD8] text-[#922B21] p-2 rounded w-1/2 hover:bg-[#F5B7B1]">Retirer</button>
-              </div>
-            </div>
-            <div className="mt-4 space-y-2">
-              {investTransactions.map(t => (
-                <div key={t.id} className={`flex justify-between p-3 rounded-xl shadow ${t.type==="deposit"?"bg-[#E8F8F5]":"bg-[#FDEDEC]"}`}>
-                  <span>{t.date} - {t.description || ""}</span>
-                  <span>{t.type==="deposit" ? "+" : "-"}{t.amount} €</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* Historique */}
-        {activeSection === "history" && (
-          <div>
-            <h1 className="text-xl font-bold mb-4 text-center text-[#2874A6]">Historique</h1>
-            <div className="space-y-2">
-              {transactions.map(t=>{
-                const catIcon = categories.find(c=>c.name===t.category)?.icon || "💰";
-                return (
-                  <div key={t.id} className={`flex justify-between p-3 rounded-xl shadow ${t.type==="income"?"bg-[#E8F8F5]":"bg-[#FDEDEC]"}`}>
-                    <span>{t.date} - {catIcon} {t.category}</span>
-                    <span>{t.type==="income" ? "+" : "-"}{t.amount} €</span>
+
+{activeSection === "history" && (
+  <div>
+    <h1 className="text-xl font-bold mb-4 text-center text-[#2874A6]">Historique</h1>
+
+    {/* États des filtres */}
+    <div className="flex gap-2 mb-4">
+  {/* Filtre Type */}
+  <select
+    value={filterType}
+    onChange={(e) => setFilterType(e.target.value)}
+    className="border p-2 rounded"
+  >
+    <option value="all">Tout</option>
+    <option value="expense">Dépenses</option>
+    <option value="income">Revenus</option>
+    <option value="savings">Invest./Épargne</option>
+
+  </select>
+
+  {/* Filtre Catégorie */}
+  <select
+    value={filterCategory}
+    onChange={(e) => setFilterCategory(e.target.value)}
+    className="border p-2 rounded"
+  >
+    <option value="all">Toutes catégories</option>
+    {categories.map((cat) => (
+      <option key={cat.name} value={`${cat.icon} ${cat.name}`}>
+  {cat.icon} {cat.name}
+</option>
+    ))}
+  </select>
+
+
+  {/* Filtre Mois */}
+  <select
+    value={filterMonth}
+    onChange={(e) => setFilterMonth(e.target.value)}
+    className="border p-2 rounded"
+  >
+    <option value="all">Tous mois</option>
+    <option value="1">Janvier</option>
+    <option value="2">Février</option>
+    <option value="3">Mars</option>
+    <option value="4">Avril</option>
+    <option value="5">Mai</option>
+    <option value="6">Juin</option>
+    <option value="7">Juillet</option>
+    <option value="8">Août</option>
+    <option value="9">Septembre</option>
+    <option value="10">Octobre</option>
+    <option value="11">Novembre</option>
+    <option value="12">Décembre</option>
+  </select>
+</div>
+
+
+    {/* Transactions filtrées */}
+    <div className="space-y-3">
+    {filteredTransactions.map((t) => {
+    const category = categories.find((c) => c.name === t.category);
+    const catIcon = category?.icon || "💰";
+    const bgColor = t.type === "income"
+    ? "bg-green-100"
+    : t.type === "savings"
+    ? "bg-purple-100"
+    : "bg-red-100";
+    const textColor = t.type === "income"
+    ? "text-green-800"
+    : t.type === "savings"
+    ? "text-purple-800"
+    : "text-red-800";
+
+          return (
+            <div
+              key={t.id}
+              className={`p-4 rounded-xl shadow ${bgColor} hover:shadow-md transition-shadow`}
+            >
+              {/* Mode édition */}
+              {editId === t.id ? (
+                <div className="space-y-2">
+                  <input
+                    type="number"
+                    value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value)}
+                    className="border p-2 w-full rounded"
+                    placeholder="Montant"
+                  />
+                  <input
+                    type="text"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className="border p-2 w-full rounded"
+                    placeholder="Description"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveEdit}
+                      className="bg-blue-500 text-white px-3 py-1 rounded"
+                    >
+                      💾 Sauvegarder
+                    </button>
+                    <button
+                      onClick={() => setEditId(null)}
+                      className="bg-gray-400 text-white px-3 py-1 rounded"
+                    >
+                      Annuler
+                    </button>
                   </div>
-                );
-              })}
+                </div>
+              ) : (
+                // Mode affichage
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow text-2xl">
+                      {catIcon}
+                    </div>
+                    <div>
+                      <p className="font-semibold">{t.category}</p>
+                      {t.description && (
+                        <p className="text-sm opacity-80">{t.description}</p>
+                      )}
+                      <p className="text-xs opacity-60">{t.date}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`font-bold ${textColor}`}>
+                      {t.type === "income" ? "+" : "-"}
+                      {t.amount} €
+                    </span>
+                    <button
+                      onClick={() => startEdit(t)}
+                      className="text-blue-500 hover:underline"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (
+                          window.confirm("❌ Es-tu sûr de vouloir supprimer cette transaction ?")
+                        ) {
+                          deleteTransaction(t.id);
+                        }
+                      }}
+                      className="text-red-500 hover:underline"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })}
+    </div>
+  </div>
+)}
+
+
+
 
       </div>
     </div>
