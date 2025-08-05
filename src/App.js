@@ -202,16 +202,23 @@ const saveEdit = () => {
 // filtrer seulement les catégories avec des dépenses > 0
 const usedCategories = categories.filter(cat => {
   const total = transactions
-    .filter(t => t.type === "expense" || t.type === "savings" && t.category.replace(/^[^\w]+/, "").trim().toLowerCase() === cat.name.toLowerCase())
+    .filter(t => 
+      (t.type === "expense" || t.type === "savings") && 
+      t.category.replace(/^[^\w]+/, "").trim().toLowerCase() === cat.name.toLowerCase()
+    )
     .reduce((sum, t) => sum + t.amount, 0);
   return total > 0;
 });
 
 const expenseByCategory = usedCategories.map(cat => {
   return transactions
-    .filter(t => t.type === "expense" || t.type === "savings" && t.category.replace(/^[^\w]+/, "").trim().toLowerCase() === cat.name.toLowerCase())
+    .filter(t => 
+      (t.type === "expense" || t.type === "savings") && 
+      t.category.replace(/^[^\w]+/, "").trim().toLowerCase() === cat.name.toLowerCase()
+    )
     .reduce((sum, t) => sum + t.amount, 0);
 });
+
 
 
 const pieData = {
@@ -410,56 +417,73 @@ const barData = {
     <h1 className="text-xl font-bold mb-4 text-center text-[#2874A6]">Historique</h1>
 
     {/* États des filtres */}
-    <div className="flex gap-2 mb-4">
+    <div className="flex flex-col sm:flex-row gap-3 mb-4 w-full">
   {/* Filtre Type */}
-  <select
-    value={filterType}
-    onChange={(e) => setFilterType(e.target.value)}
-    className="border p-2 rounded"
-  >
-    <option value="all">Tout</option>
-    <option value="expense">Dépenses</option>
-    <option value="income">Revenus</option>
-    <option value="savings">Invest./Épargne</option>
-
-  </select>
+  <div className="relative w-full sm:w-auto">
+    <label className="block text-sm font-semibold text-[#2874A6] mb-1">
+      Type
+    </label>
+    <select
+      value={filterType}
+      onChange={(e) => setFilterType(e.target.value)}
+      className="appearance-none border border-[#D6EAF8] p-3 rounded-lg w-full bg-white text-[#2874A6] focus:outline-none focus:ring-2 focus:ring-[#7FB3D5] shadow-sm"
+    >
+      <option value="all">Tout</option>
+      <option value="expense">Dépenses</option>
+      <option value="income">Revenus</option>
+      <option value="savings">Invest./Épargne</option>
+    </select>
+    <span className="absolute right-3 top-9 text-[#7FB3D5]">▼</span>
+  </div>
 
   {/* Filtre Catégorie */}
-  <select
-    value={filterCategory}
-    onChange={(e) => setFilterCategory(e.target.value)}
-    className="border p-2 rounded"
-  >
-    <option value="all">Toutes catégories</option>
-    {categories.map((cat) => (
-      <option key={cat.name} value={`${cat.icon} ${cat.name}`}>
-  {cat.icon} {cat.name}
-</option>
-    ))}
-  </select>
-
+  <div className="relative w-full sm:w-auto">
+    <label className="block text-sm font-semibold text-[#2874A6] mb-1">
+      Catégorie
+    </label>
+    <select
+      value={filterCategory}
+      onChange={(e) => setFilterCategory(e.target.value)}
+      className="appearance-none border border-[#D6EAF8] p-3 rounded-lg w-full bg-white text-[#2874A6] focus:outline-none focus:ring-2 focus:ring-[#7FB3D5] shadow-sm"
+    >
+      <option value="all">Toutes catégories</option>
+      {categories.map((cat) => (
+        <option key={cat.name} value={`${cat.icon} ${cat.name}`}>
+          {cat.icon} {cat.name}
+        </option>
+      ))}
+    </select>
+    <span className="absolute right-3 top-9 text-[#7FB3D5]">▼</span>
+  </div>
 
   {/* Filtre Mois */}
-  <select
-    value={filterMonth}
-    onChange={(e) => setFilterMonth(e.target.value)}
-    className="border p-2 rounded"
-  >
-    <option value="all">Tous mois</option>
-    <option value="1">Janvier</option>
-    <option value="2">Février</option>
-    <option value="3">Mars</option>
-    <option value="4">Avril</option>
-    <option value="5">Mai</option>
-    <option value="6">Juin</option>
-    <option value="7">Juillet</option>
-    <option value="8">Août</option>
-    <option value="9">Septembre</option>
-    <option value="10">Octobre</option>
-    <option value="11">Novembre</option>
-    <option value="12">Décembre</option>
-  </select>
+  <div className="relative w-full sm:w-auto">
+    <label className="block text-sm font-semibold text-[#2874A6] mb-1">
+      Mois
+    </label>
+    <select
+      value={filterMonth}
+      onChange={(e) => setFilterMonth(e.target.value)}
+      className="appearance-none border border-[#D6EAF8] p-3 rounded-lg w-full bg-white text-[#2874A6] focus:outline-none focus:ring-2 focus:ring-[#7FB3D5] shadow-sm"
+    >
+      <option value="all">Tous mois</option>
+      <option value="1">Janvier</option>
+      <option value="2">Février</option>
+      <option value="3">Mars</option>
+      <option value="4">Avril</option>
+      <option value="5">Mai</option>
+      <option value="6">Juin</option>
+      <option value="7">Juillet</option>
+      <option value="8">Août</option>
+      <option value="9">Septembre</option>
+      <option value="10">Octobre</option>
+      <option value="11">Novembre</option>
+      <option value="12">Décembre</option>
+    </select>
+    <span className="absolute right-3 top-9 text-[#7FB3D5]">▼</span>
+  </div>
 </div>
+
 
 
     {/* Transactions filtrées */}
