@@ -296,25 +296,26 @@ const barData = {
 
     {/* Grille plus compacte sur mobile */}
     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
-      <div className="bg-[#D5F5E3] rounded-xl p-4 shadow text-center">
-        <p>Revenus</p>
-        <p className="text-2xl font-bold">{totalIncome} €</p>
-      </div>
+    <div className="bg-[#D5F5E3] rounded-xl p-4 shadow text-center">
+  <p>Revenus</p>
+  <p className="text-2xl font-bold">{totalIncome.toFixed(2)} €</p>
+</div>
 
-      <div className="bg-[#FADBD8] rounded-xl p-4 shadow text-center">
-        <p>Dépenses</p>
-        <p className="text-2xl font-bold">{totalExpense} €</p>
-      </div>
+<div className="bg-[#FADBD8] rounded-xl p-4 shadow text-center">
+  <p>Dépenses</p>
+  <p className="text-2xl font-bold">{totalExpense.toFixed(2)} €</p>
+</div>
 
-      <div className="bg-[#E8DAEF] rounded-xl p-4 shadow text-center">
-        <p>Épargne/Invest.</p>
-        <p className="text-2xl font-bold">{totalSavings} €</p>
-      </div>
+<div className="bg-[#E8DAEF] rounded-xl p-4 shadow text-center">
+  <p>Épargne/Invest.</p>
+  <p className="text-2xl font-bold">{totalSavings.toFixed(2)} €</p>
+</div>
 
-      <div className="bg-[#D6EAF8] rounded-xl p-4 shadow text-center">
-        <p>Solde</p>
-        <p className="text-2xl font-bold">{balance} €</p>
-      </div>
+<div className="bg-[#D6EAF8] rounded-xl p-4 shadow text-center">
+  <p>Solde</p>
+  <p className="text-2xl font-bold">{balance.toFixed(2)} €</p>
+</div>
+
     </div>
 
     {/* Graphiques */}
