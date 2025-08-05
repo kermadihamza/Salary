@@ -344,45 +344,66 @@ const barData = {
 
 {/* Catégories */}
 {activeSection === "categories" && (
-  <div>
-    <h1 className="text-xl font-bold mb-4 text-center text-[#2874A6]">Catégories</h1>
-    <div className="bg-white p-4 rounded-xl shadow mb-4">
-      <input 
-        type="text" 
-        value={newCategory} 
-        onChange={e=>setNewCategory(e.target.value)} 
-        placeholder="Nom" 
-        className="border p-2 w-full mb-2"
-      />
+  <div className="space-y-6">
+    <h1 className="text-2xl font-bold text-center text-[#2874A6]">
+      Catégories
+    </h1>
+
+    {/* Formulaire ajout catégorie */}
+    <div className="bg-white rounded-3xl shadow-lg p-5 space-y-4 border border-gray-100">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-600">
+          Nom de la catégorie
+        </label>
+        <input 
+          type="text" 
+          value={newCategory} 
+          onChange={e=>setNewCategory(e.target.value)} 
+          placeholder="Ex: Transport" 
+          className="border border-gray-200 p-3 rounded-xl w-full focus:ring-2 focus:ring-[#7FB3D5] focus:outline-none"
+        />
+      </div>
 
       {/* Liste dynamique d’icônes */}
-      <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto border p-2 rounded mb-2">
-        {iconsData.map(icon => (
-          <button
-            key={icon}
-            onClick={() => setSelectedIcon(icon)}
-            className={`p-2 border rounded text-xl ${
-              selectedIcon === icon ? "bg-[#D6EAF8]" : ""
-            }`}
-          >
-            {icon}
-          </button>
-        ))}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-600">
+          Icône
+        </label>
+        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto border border-gray-200 p-3 rounded-xl">
+          {iconsData.map(icon => (
+            <button
+              key={icon}
+              onClick={() => setSelectedIcon(icon)}
+              className={`p-2 text-xl rounded-lg transition-all ${
+                selectedIcon === icon 
+                  ? "bg-[#D6EAF8] ring-2 ring-[#7FB3D5]" 
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              {icon}
+            </button>
+          ))}
+        </div>
       </div>
 
       <button 
         onClick={addCategory} 
-        className="bg-[#D5F5E3] text-[#145A32] p-2 rounded w-full hover:bg-[#ABEBC6]"
+        className="w-full bg-gradient-to-r from-[#7FB3D5] to-[#2874A6] text-white p-3 rounded-xl font-semibold hover:opacity-90 transition"
       >
-        Ajouter
+        Ajouter Catégorie
       </button>
     </div>
 
-    <div className="grid grid-cols-2 gap-2">
+    {/* Liste des catégories */}
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
       {categories.map((cat,index)=>(
-        <div key={index} className="p-3 rounded shadow text-center" style={{backgroundColor: cat.color}}>
-          <div className="text-2xl">{cat.icon}</div>
-          <div>{cat.name}</div>
+        <div 
+          key={index} 
+          className="p-4 rounded-2xl shadow-md flex flex-col items-center border border-gray-100"
+          style={{backgroundColor: cat.color}}
+        >
+          <div className="text-3xl">{cat.icon}</div>
+          <div className="font-medium mt-2">{cat.name}</div>
         </div>
       ))}
     </div>
@@ -390,25 +411,79 @@ const barData = {
 )}
 
 
-        {/* Transactions */}
-        {activeSection === "transactions" && (
-          <div>
-            <h1 className="text-xl font-bold mb-4 text-center text-[#2874A6]">Transactions</h1>
-            <div className="bg-white p-4 rounded-xl shadow space-y-3">
-              <select value={type} onChange={e=>setType(e.target.value)} className="border p-2 rounded w-full">
-                <option value="expense">Dépense</option>
-                <option value="income">Revenu</option>
-                <option value="savings">Invest./Épargne</option>
-              </select>
-              <select value={selectedCategory} onChange={e=>setSelectedCategory(e.target.value)} className="border p-2 rounded w-full">
-                {categories.map(cat=><option key={cat.name}>{cat.icon} {cat.name}</option>)}
-              </select>
-              <input type="number" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="Montant" className="border p-2 rounded w-full"/>
-              <input type="text" value={description} onChange={e=>setDescription(e.target.value)} placeholder="Description" className="border p-2 rounded w-full"/>
-              <button onClick={addTransaction} className="bg-[#D6EAF8] text-[#2874A6] p-2 rounded w-full hover:bg-[#AED6F1]">Ajouter</button>
-            </div>
-          </div>
-        )}
+
+{/* Transactions */}
+{activeSection === "transactions" && (
+  <div className="space-y-6">
+    <h1 className="text-2xl font-bold text-center text-[#2874A6]">
+      Transactions
+    </h1>
+
+    <div className="bg-white rounded-3xl shadow-lg p-5 space-y-4 border border-gray-100">
+      {/* Type */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-600">Type</label>
+        <select 
+          value={type} 
+          onChange={e=>setType(e.target.value)} 
+          className="border border-gray-200 p-3 rounded-xl w-full focus:ring-2 focus:ring-[#7FB3D5] focus:outline-none"
+        >
+          <option value="expense">Dépense</option>
+          <option value="income">Revenu</option>
+          <option value="savings">Invest./Épargne</option>
+        </select>
+      </div>
+
+      {/* Catégorie */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-600">Catégorie</label>
+        <select 
+          value={selectedCategory} 
+          onChange={e=>setSelectedCategory(e.target.value)} 
+          className="border border-gray-200 p-3 rounded-xl w-full focus:ring-2 focus:ring-[#7FB3D5] focus:outline-none"
+        >
+          {categories.map(cat=>
+            <option key={cat.name}>
+              {cat.icon} {cat.name}
+            </option>
+          )}
+        </select>
+      </div>
+
+      {/* Montant */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-600">Montant (€)</label>
+        <input 
+          type="number" 
+          value={amount} 
+          onChange={e=>setAmount(e.target.value)} 
+          placeholder="0.00" 
+          className="border border-gray-200 p-3 rounded-xl w-full focus:ring-2 focus:ring-[#7FB3D5] focus:outline-none"
+        />
+      </div>
+
+      {/* Description */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-600">Description</label>
+        <input 
+          type="text" 
+          value={description} 
+          onChange={e=>setDescription(e.target.value)} 
+          placeholder="Ex: Achat course" 
+          className="border border-gray-200 p-3 rounded-xl w-full focus:ring-2 focus:ring-[#7FB3D5] focus:outline-none"
+        />
+      </div>
+
+      <button 
+        onClick={addTransaction} 
+        className="w-full bg-gradient-to-r from-[#7FB3D5] to-[#2874A6] text-white p-3 rounded-xl font-semibold hover:opacity-90 transition"
+      >
+        Ajouter Transaction
+      </button>
+    </div>
+  </div>
+)}
+
 
 
 
